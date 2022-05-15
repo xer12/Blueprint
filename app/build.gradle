@@ -3,6 +3,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('..\\key\\key.keystore')
+            storePassword '123456'
+            keyPassword 'zxcvbnmasd'
+            keyAlias 'admin'
+        }
+    }
     compileSdk 32
 
     defaultConfig {
@@ -13,17 +21,43 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            // 混淆
+            minifyEnabled true
+            // Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
+            // 前一部分代表系统默认的android程序的混淆文件，该文件已经包含了基本的混淆声明，后一个文件是自己的定义混淆文件
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    // 自定义apk文件名
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def fileName
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                if (variant.buildType.name.equals('release')) {
+                    fileName = "blueprint_v${defaultConfig.versionName}_${defaultConfig.versionCode}.apk"
+                } else if (variant.buildType.name.equals('debug')) {
+                    fileName = "blueprint_v${defaultConfig.versionName}_${defaultConfig.versionCode}_debug.apk"
+                }
+                outputFileName = fileName
+            }
+        }
     }
 }
 
